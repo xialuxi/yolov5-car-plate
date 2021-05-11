@@ -1,0 +1,9 @@
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: /home/xialuxi/work/dukto/data/CCPD2020/CCPD2020/images/train/  # 16551 images
+val: /home/xialuxi/work/dukto/data/CCPD2020/CCPD2020/images/val/  # 4952 images
+
+# number of classes
+nc: 1
+
+# class names
+names: [ 'plate']
