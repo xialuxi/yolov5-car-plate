@@ -97,6 +97,23 @@ class CosinLoss(nn.Module):
         loss = 1 - similarity
         loss = loss * mask_reshape[:, :, 0]
         return loss.sum()
+    
+    
+class WingLoss(nn.Module):
+    def __init__(self, w=10, e=2):
+        super(WingLoss, self).__init__()
+        self.w = w
+        self.e = e
+        self.C = self.w - self.w * np.log(1 + self.w / self.e)
+
+    def forward(self, x, t, sigma=1):
+        weight = torch.ones_like(t)
+        weight[torch.where(t==-1)] = 0
+        diff = weight * (x - t)
+        abs_diff = diff.abs()
+        flag = (abs_diff.data < self.w).float()
+        y = flag * self.w * torch.log(1 + abs_diff / self.e) + (1 - flag) * (abs_diff - self.C)
+        return y.sum()
 
 class CrossIouLoss(nn.Module):
     def __init__(self):
