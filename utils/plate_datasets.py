@@ -549,9 +549,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             labels, landmarks = self.labels[index].copy(), self.landmarks[index].copy()
             if labels.size:  # normalized xywh to pixel xyxy format
                 labels[:, 1:] = xywhn2xyxy(labels[:, 1:], ratio[0] * w, ratio[1] * h, padw=pad[0], padh=pad[1])
-                mask_landmarks = np.array(landmarks != -1, dtype = np.int32)
-                landmarks = [xyn2xy(x, ratio[0] * w, ratio[1] * h, padw=pad[0], padh=pad[1]) for x in landmarks]
-                landmarks =  landmarks * mask_landmarks + mask_landmarks - 1
+                mask_landmarks = [np.array(x != -1, dtype = np.int32) for x in landmarks]
+                landmarks = [xyn2xy(x, w, h, padw, padh) for x in landmarks]
+                landmarks = [x * y + y - 1 for x, y in zip(landmarks, mask_landmarks)]
                 #landmarks = landmarks.reshape(landmarks.shape[0], -1)
                 #labels = np.hstack((labels,landmarks)) 
 
