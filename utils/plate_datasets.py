@@ -423,6 +423,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             self.img_files = [self.img_files[i] for i in irect]
             self.label_files = [self.label_files[i] for i in irect]
             self.labels = [self.labels[i] for i in irect]
+            self.landmarks = [self.landmarks[i] for i in irect]
             self.shapes = s[irect]  # wh
             ar = ar[irect]
 
@@ -550,7 +551,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             if labels.size:  # normalized xywh to pixel xyxy format
                 labels[:, 1:] = xywhn2xyxy(labels[:, 1:], ratio[0] * w, ratio[1] * h, padw=pad[0], padh=pad[1])
                 mask_landmarks = [np.array(x != -1, dtype = np.int32) for x in landmarks]
-                landmarks = [xyn2xy(x, w, h, padw, padh) for x in landmarks]
+                landmarks = [xyn2xy(x, w, h, pad[0], pad[1]) for x in landmarks]
                 landmarks = [x * y + y - 1 for x, y in zip(landmarks, mask_landmarks)]
                 #landmarks = landmarks.reshape(landmarks.shape[0], -1)
                 #labels = np.hstack((labels,landmarks)) 
@@ -569,6 +570,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
         #for test model
         else:
+            landmarks = np.array(landmarks)
             if landmarks.shape[0] > 0:
                 landmarks = landmarks.reshape(landmarks.shape[0], -1)
                 labels = np.hstack((labels,landmarks)) 
