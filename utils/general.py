@@ -340,7 +340,7 @@ def clip_coords(boxes, img_shape):
     boxes[:, 3].clamp_(0, img_shape[0])  # y2
 
 
-def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=1e-7):
+def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, SIoU=False, eps=1e-7):
     # Returns the IoU of box1 to box2. box1 is 4, box2 is nx4
     box2 = box2.T
 
@@ -367,6 +367,22 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
     if GIoU or DIoU or CIoU:
         cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)  # convex (smallest enclosing box) width
         ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
+        if SIoU:    # SIoU Loss https://arxiv.org/pdf/2205.12740.pdf
+            sigma = torch.pow(cw ** 2 + ch ** 2, 0.5)
+            sin_alpha_1 = ch / sigma
+            sin_alpha_2 = cw / sigma
+            threshold = pow(2, 0.5) / 2
+            sin_alpha = torch.where(sin_alpha_1 > threshold, sin_alpha_2, sin_alpha_1)
+            # angle_cost = 1 - 2 * torch.pow( torch.sin(torch.arcsin(sin_alpha) - np.pi/4), 2)
+            angle_cost = torch.cos(torch.arcsin(sin_alpha) * 2 - np.pi / 2)
+            rho_x = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) / cw) ** 2
+            rho_y = ((b2_y1 + b2_y2 - b1_y1 - b1_y2) / ch) ** 2
+            gamma = 2 - angle_cost
+            distance_cost = 2 - torch.exp(-1 * gamma * rho_x) - torch.exp(-1 * gamma * rho_y)
+            omiga_w = torch.abs(w1 - w2) / torch.max(w1, w2)
+            omiga_h = torch.abs(h1 - h2) / torch.max(h1, h2)
+            shape_cost = torch.pow(1 - torch.exp(-1 * omiga_w), 4) + torch.pow(1 - torch.exp(-1 * omiga_h), 4)
+            return iou - 0.5 * (distance_cost + shape_cost)
         if CIoU or DIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
             c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
             rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 +
