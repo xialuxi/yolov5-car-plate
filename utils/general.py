@@ -368,7 +368,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, SIoU
         cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)  # convex (smallest enclosing box) width
         ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
         if SIoU:    # SIoU Loss https://arxiv.org/pdf/2205.12740.pdf
-            sigma = torch.pow(cw ** 2 + ch ** 2, 0.5)
+            sigma = torch.pow(((b2_x1 + b2_x2 - b1_x1 - b1_x2)*0.5) ** 2 + ((b2_y1 + b2_y2 - b1_y1 - b1_y2)*0.5) ** 2, 0.5)
             sin_alpha_1 = ch / sigma
             sin_alpha_2 = cw / sigma
             threshold = pow(2, 0.5) / 2
