@@ -382,8 +382,8 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, SIoU
             rho_y = (s_ch / (ch + eps)) ** 2
             gamma = angle_cost - 2
             distance_cost = 2 - torch.exp(gamma * rho_x) - torch.exp(gamma * rho_y)
-            omiga_w = torch.abs(w1 - w2) / (torch.max(w1, w2) + eps)
-            omiga_h = torch.abs(h1 - h2) / (torch.max(h1, h2) + eps)
+            omiga_w = torch.abs(w1 - w2) / torch.max(w1, w2)
+            omiga_h = torch.abs(h1 - h2) / torch.max(h1, h2)
             shape_cost = torch.pow(1 - torch.exp(-1 * omiga_w), 4) + torch.pow(1 - torch.exp(-1 * omiga_h), 4)
             return iou - 0.5 * (distance_cost + shape_cost)
         if CIoU or DIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
